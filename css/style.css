@@ -1,0 +1,835 @@
+/* ============================================================
+   SportHub – style.css
+   ============================================================ */
+
+/* ---------- Reset & base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    background: #f7f7f5;
+    color: #1a1a1a;
+    min-height: 100vh;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* ============================================================
+   NAV
+   ============================================================ */
+nav {
+    display: flex;
+    align-items: center;
+    padding: 0 36px;
+    height: 56px;
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    gap: 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: auto;
+}
+
+.nav-logo-icon {
+    width: 28px;
+    height: 28px;
+    background: #1a3a1a;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+}
+
+.nav-logo-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+nav a {
+    font-size: 14px;
+    color: #666;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+nav a.active {
+    color: #1a3a1a;
+    font-weight: 500;
+}
+
+.nav-active-bar {
+    position: relative;
+}
+
+.nav-active-bar::after {
+    content: '';
+    position: absolute;
+    bottom: -17px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #1a3a1a;
+    border-radius: 1px;
+}
+
+.nav-btn {
+    padding: 7px 16px;
+    background: #1a3a1a;
+    color: white;
+    border-radius: 7px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.nav-btn:hover {
+    background: #243f24;
+}
+
+/* ============================================================
+   ALERTS / FLASH MESSAGES
+   ============================================================ */
+.alert {
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.alert-success {
+    background: #e8f0e8;
+    color: #2d6a2d;
+    border: 1px solid #c8dfc8;
+}
+
+.alert-error {
+    background: #fdecea;
+    color: #c04040;
+    border: 1px solid #f0c8c8;
+}
+
+/* ============================================================
+   FORMS – shared
+   ============================================================ */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: #fff;
+    font-family: inherit;
+    transition: border-color 0.15s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #1a3a1a;
+}
+
+.form-group input::placeholder {
+    color: #bbb;
+}
+
+.form-group input.input-error {
+    border-color: #c04040;
+}
+
+.field-error {
+    font-size: 12px;
+    color: #c04040;
+    margin-top: 4px;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 13px;
+    background: #1a3a1a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 22px;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+
+.btn-primary:hover {
+    background: #243f24;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #bbb;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #eee;
+}
+
+/* ============================================================
+   LOGIN PAGE
+   ============================================================ */
+.login-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+}
+
+.login-left {
+    position: relative;
+    overflow: hidden;
+    background: #1a3a1a;
+}
+
+.login-left svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.login-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(20,53,26,0.25), rgba(20,53,26,0.7));
+    z-index: 1;
+}
+
+.login-left-text {
+    position: absolute;
+    bottom: 48px;
+    left: 48px;
+    z-index: 2;
+}
+
+.login-tagline {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    display: block;
+}
+
+.login-title {
+    font-size: 28px;
+    font-weight: 500;
+    color: white;
+    line-height: 1.25;
+}
+
+.login-sub {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 8px;
+    line-height: 1.6;
+}
+
+.login-right {
+    padding: 60px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: #fff;
+}
+
+.login-right h2 {
+    font-size: 24px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+}
+
+.login-right .sub {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 32px;
+}
+
+.login-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 36px;
+}
+
+.login-logo-text {
+    font-size: 17px;
+    font-weight: 500;
+}
+
+.forgot {
+    text-align: right;
+    font-size: 13px;
+    color: #1a3a1a;
+    margin-bottom: 22px;
+    cursor: pointer;
+}
+
+.register-link {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+}
+
+.register-link a {
+    color: #1a3a1a;
+    font-weight: 500;
+}
+
+/* ============================================================
+   REGISTER PAGE – extends login styles
+   ============================================================ */
+.register-note {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   SPORTOVIŠTĚ PAGE
+   ============================================================ */
+.facilities-page {
+    background: #f7f7f5;
+    min-height: calc(100vh - 56px);
+}
+
+.facilities-inner {
+    padding: 36px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.page-heading {
+    font-size: 22px;
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+.page-sub {
+    font-size: 14px;
+    color: #888;
+    margin-top: 4px;
+    margin-bottom: 22px;
+}
+
+.filter-pills {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+.pill {
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #666;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+
+.pill:hover {
+    border-color: #bbb;
+    color: #333;
+}
+
+.pill.active {
+    background: #1a3a1a;
+    color: white;
+    border-color: #1a3a1a;
+}
+
+.facilities-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.facility-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e8e8e8;
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.facility-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+.facility-visual {
+    height: 155px;
+    position: relative;
+    overflow: hidden;
+}
+
+.facility-visual svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.facility-info {
+    padding: 16px 18px 18px;
+}
+
+.facility-type-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    margin-bottom: 7px;
+    font-weight: 500;
+}
+
+.tag-gym       { background: #fdf4e3; color: #a07020; }
+.tag-weights   { background: #f0f0ee; color: #555; }
+.tag-oval      { background: #e8f0e8; color: #2d6a2d; }
+.tag-field     { background: #e8f0e8; color: #2d6a2d; }
+.tag-other     { background: #f0f0f8; color: #446; }
+
+.facility-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.facility-desc {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.facility-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.capacity {
+    font-size: 13px;
+    color: #888;
+}
+
+.capacity span {
+    color: #1a1a1a;
+    font-weight: 500;
+}
+
+.btn-reserve {
+    padding: 7px 16px;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    color: white;
+    transition: opacity 0.15s;
+}
+
+.btn-reserve:hover { opacity: 0.85; }
+
+.btn-reserve-gym     { background: #b07820; }
+.btn-reserve-weights { background: #555; }
+.btn-reserve-oval    { background: #2d6a2d; }
+.btn-reserve-field   { background: #2d6a2d; }
+.btn-reserve-default { background: #1a3a1a; }
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #aaa;
+    font-size: 15px;
+    grid-column: 1 / -1;
+}
+
+/* ============================================================
+   REZERVACE PAGE
+   ============================================================ */
+.reservation-page {
+    background: #f7f7f5;
+    min-height: calc(100vh - 56px);
+}
+
+.reservation-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: calc(100vh - 56px);
+}
+
+.reservation-visual {
+    position: relative;
+    overflow: hidden;
+    background: #1a6a1a;
+}
+
+.reservation-visual svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: absolute;
+    inset: 0;
+}
+
+.res-form-side {
+    padding: 44px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: #fff;
+}
+
+.breadcrumb {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 18px;
+}
+
+.breadcrumb span {
+    color: #1a3a1a;
+    font-weight: 500;
+}
+
+.res-form-side h2 {
+    font-size: 22px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+
+.facility-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e8f0e8;
+    color: #2d6a2d;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 24px;
+}
+
+.badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #2d6a2d;
+    flex-shrink: 0;
+}
+
+.form-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 14px;
+}
+
+.form-card .form-group {
+    margin-bottom: 0;
+}
+
+.time-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 7px 0;
+    border-bottom: 1px solid #f5f5f5;
+    color: #888;
+}
+
+.summary-row:last-child { border-bottom: none; }
+
+.summary-row .val {
+    color: #1a1a1a;
+    font-weight: 500;
+}
+
+.avail-ok {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #2d6a2d;
+    margin-bottom: 18px;
+}
+
+.avail-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2d6a2d;
+    flex-shrink: 0;
+}
+
+.avail-error {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    color: #c04040;
+    margin-bottom: 18px;
+}
+
+.avail-error-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #c04040;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   MOJE REZERVACE PAGE
+   ============================================================ */
+.my-res-page {
+    background: #f7f7f5;
+    min-height: calc(100vh - 56px);
+}
+
+.my-res-inner {
+    padding: 36px 40px;
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.res-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.res-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    display: grid;
+    grid-template-columns: 4px 60px 1fr auto;
+    overflow: hidden;
+    align-items: stretch;
+}
+
+.res-stripe         { background: #2d6a2d; }
+.res-stripe-cancel  { background: #ddd; }
+
+.res-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f7f7f5;
+    padding: 0 4px;
+}
+
+.res-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.icon-green { background: #e8f0e8; }
+.icon-dark  { background: #f0f0ee; }
+.icon-blue  { background: #e8eef8; }
+
+.res-info {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.res-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 2px;
+}
+
+.res-time {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 1px;
+}
+
+.res-id {
+    font-size: 12px;
+    color: #ccc;
+}
+
+.res-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+}
+
+.badge-active {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #e8f0e8;
+    color: #2d6a2d;
+    white-space: nowrap;
+}
+
+.badge-cancelled {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #f0f0f0;
+    color: #999;
+    white-space: nowrap;
+}
+
+.btn-cancel {
+    padding: 7px 14px;
+    border: 1px solid #f0d0d0;
+    border-radius: 7px;
+    background: white;
+    color: #c04040;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+
+.btn-cancel:hover {
+    background: #fdecea;
+}
+
+.new-res-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 16px;
+    border: 1.5px dashed #ddd;
+    border-radius: 12px;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a3a1a;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 4px;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.new-res-btn:hover {
+    background: #f0f5f0;
+    border-color: #c0d4c0;
+}
+
+/* Empty reservations */
+.res-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #aaa;
+    font-size: 15px;
+}
+
+/* ============================================================
+   RESPONSIVE – basic
+   ============================================================ */
+@media (max-width: 768px) {
+    .login-layout {
+        grid-template-columns: 1fr;
+    }
+    .login-left {
+        display: none;
+    }
+    .login-right {
+        padding: 40px 28px;
+        justify-content: flex-start;
+        padding-top: 60px;
+    }
+    .facilities-grid {
+        grid-template-columns: 1fr;
+    }
+    .reservation-layout {
+        grid-template-columns: 1fr;
+    }
+    .reservation-visual {
+        display: none;
+    }
+    .res-form-side {
+        padding: 28px 24px;
+    }
+    nav {
+        padding: 0 16px;
+        gap: 20px;
+    }
+    .facilities-inner,
+    .my-res-inner {
+        padding: 24px 16px;
+    }
+}
