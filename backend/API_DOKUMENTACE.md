@@ -1,4 +1,4 @@
-# API Dokumentace – Rezervační systém sportovišť
+# API Dokumentace – Rezervační systém sportovišť (SportHub)
 
 ## Base URL
 
@@ -29,6 +29,19 @@ Token je platný **24 hodin**.
 | `student` | Základní uživatel – může rezervovat sportoviště |
 | `teacher` | Stejná práva jako student |
 | `admin` | Může spravovat sportoviště a vidí všechny rezervace |
+
+---
+
+## Typy sportovišť
+
+Povolené hodnoty pro pole `type`:
+
+| Hodnota | Popis |
+|---------|-------|
+| `tělocvična` | Tělocvična |
+| `posilovna` | Posilovna |
+| `ovál` | Atletický ovál |
+| `hřiště` | Sportovní hřiště |
 
 ---
 
@@ -124,15 +137,17 @@ Vrátí seznam všech sportovišť. Lze filtrovat pomocí query parametrů.
 **Query parametry (volitelné):**
 | Parametr | Typ | Popis |
 |----------|-----|-------|
-| `type` | string | Filtr podle typu (např. `tělocvična`, `posilovna`) |
+| `type` | string | Filtr podle typu (`tělocvična`, `posilovna`, `ovál`, `hřiště`) |
 | `capacity` | number | Minimální kapacita |
+| `location` | string | Hledání v umístění (částečná shoda) |
 
 **Příklady:**
 ```
 GET /api/facilities
 GET /api/facilities?type=tělocvična
 GET /api/facilities?capacity=20
-GET /api/facilities?type=tělocvična&capacity=10
+GET /api/facilities?type=posilovna&capacity=10
+GET /api/facilities?location=Přízemí
 ```
 
 **Odpověď – úspěch `200`:**
@@ -140,22 +155,29 @@ GET /api/facilities?type=tělocvična&capacity=10
 [
   {
     "id": 1,
-    "name": "Tělocvična 1",
+    "name": "Hlavní tělocvična",
     "type": "tělocvična",
-    "description": "Velká tělocvična s parketovou podlahou",
     "capacity": 30,
+    "location": "Přízemí",
+    "description": "Velká tělocvična pro kolektivní sporty",
     "created_at": "2026-04-20T17:57:45.000Z"
   },
   {
     "id": 2,
-    "name": "Posilovna",
+    "name": "Posilovna A",
     "type": "posilovna",
-    "description": "Plně vybavená posilovna",
-    "capacity": 20,
+    "capacity": 15,
+    "location": "1. patro",
+    "description": "Moderní posilovna s kardio zónou",
     "created_at": "2026-04-20T17:57:45.000Z"
   }
 ]
 ```
+
+**Možné chyby:**
+| Kód | Popis |
+|-----|-------|
+| `400` | Neplatná hodnota parametru `type` |
 
 ---
 
@@ -172,10 +194,11 @@ GET /api/facilities/1
 ```json
 {
   "id": 1,
-  "name": "Tělocvična 1",
+  "name": "Hlavní tělocvična",
   "type": "tělocvična",
-  "description": "Velká tělocvična s parketovou podlahou",
   "capacity": 30,
+  "location": "Přízemí",
+  "description": "Velká tělocvična pro kolektivní sporty",
   "created_at": "2026-04-20T17:57:45.000Z"
 }
 ```
@@ -194,23 +217,25 @@ GET /api/facilities/1
 {
   "name": "Tělocvična 3",
   "type": "tělocvična",
-  "description": "Nová tělocvična v přízemí",
-  "capacity": 25
+  "capacity": 25,
+  "location": "2. patro",
+  "description": "Nová tělocvična ve druhém patře"
 }
 ```
 
 | Pole | Typ | Povinné | Popis |
 |------|-----|---------|-------|
 | `name` | string | ✅ | Název (2–100 znaků) |
-| `type` | string | ✅ | Typ (2–50 znaků) |
-| `description` | string | ❌ | Popis |
+| `type` | string | ✅ | Typ (`tělocvična` / `posilovna` / `ovál` / `hřiště`) |
 | `capacity` | number | ✅ | Kapacita (1–10000) |
+| `location` | string | ❌ | Umístění (max. 100 znaků) |
+| `description` | string | ❌ | Popis |
 
 **Odpověď – úspěch `201`:**
 ```json
 {
   "message": "Sportoviště přidáno",
-  "id": 4
+  "id": 7
 }
 ```
 
@@ -226,7 +251,7 @@ GET /api/facilities/1
 
 **Příklad:**
 ```
-DELETE /api/facilities/4
+DELETE /api/facilities/7
 ```
 
 **Odpověď – úspěch `200`:**
@@ -262,7 +287,7 @@ Všechny endpointy vyžadují přihlášení (`Authorization: Bearer <token>`).
     "id": 1,
     "user_id": 1,
     "facility_id": 1,
-    "facility_name": "Tělocvična 1",
+    "facility_name": "Hlavní tělocvična",
     "type": "tělocvična",
     "date": "2026-04-25T00:00:00.000Z",
     "time_from": "10:00:00",
@@ -282,7 +307,7 @@ Všechny endpointy vyžadují přihlášení (`Authorization: Bearer <token>`).
     "user_name": "Jan Novák",
     "email": "jan@skola.cz",
     "facility_id": 1,
-    "facility_name": "Tělocvična 1",
+    "facility_name": "Hlavní tělocvična",
     "date": "2026-04-25T00:00:00.000Z",
     "time_from": "10:00:00",
     "time_to": "11:00:00",
@@ -385,8 +410,8 @@ const res = await fetch(`${BASE_URL}/api/auth/login`, {
 const data = await res.json();
 const token = data.token;
 
-// Výpis sportovišť
-const facilities = await fetch(`${BASE_URL}/api/facilities`, {
+// Výpis sportovišť (filtr: pouze tělocvičny v přízemí)
+const facilities = await fetch(`${BASE_URL}/api/facilities?type=tělocvična&location=Přízemí`, {
   headers: { 'Authorization': `Bearer ${token}` }
 });
 const list = await facilities.json();
@@ -404,5 +429,11 @@ const reservation = await fetch(`${BASE_URL}/api/reservations`, {
     time_from: '10:00',
     time_to: '11:00'
   })
+});
+
+// Zrušení rezervace
+await fetch(`${BASE_URL}/api/reservations/1`, {
+  method: 'DELETE',
+  headers: { 'Authorization': `Bearer ${token}` }
 });
 ```

@@ -3,14 +3,19 @@ const router = express.Router();
 const db = require('../db');
 const { authMiddleware, adminOnly } = require('../middleware/auth');
 
+const ALLOWED_TYPES = ['tělocvična', 'posilovna', 'ovál', 'hřiště'];
+
 // GET /api/facilities — výpis sportovišť (s volitelným filtrováním)
 router.get('/', authMiddleware, async (req, res) => {
-    const { type, capacity } = req.query;
+    const { type, capacity, location } = req.query;
 
     let query = 'SELECT * FROM facilities WHERE 1=1';
     const params = [];
 
     if (type) {
+        if (!ALLOWED_TYPES.includes(type)) {
+            return res.status(400).json({ error: `Neplatný typ. Povolené hodnoty: ${ALLOWED_TYPES.join(', ')}` });
+        }
         query += ' AND type = ?';
         params.push(type);
     }
@@ -18,6 +23,11 @@ router.get('/', authMiddleware, async (req, res) => {
     if (capacity) {
         query += ' AND capacity >= ?';
         params.push(parseInt(capacity));
+    }
+
+    if (location) {
+        query += ' AND location LIKE ?';
+        params.push(`%${location}%`);
     }
 
     try {
@@ -41,7 +51,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 
 // POST /api/facilities — přidání sportoviště (pouze admin)
 router.post('/', authMiddleware, adminOnly, async (req, res) => {
-    const { name, type, description, capacity } = req.body;
+    const { name, type, description, capacity, location } = req.body;
 
     if (!name || !type || !capacity) {
         return res.status(400).json({ error: 'Vyplňte název, typ a kapacitu' });
@@ -51,8 +61,8 @@ router.post('/', authMiddleware, adminOnly, async (req, res) => {
         return res.status(400).json({ error: 'Název musí mít 2–100 znaků' });
     }
 
-    if (typeof type !== 'string' || type.trim().length < 2 || type.trim().length > 50) {
-        return res.status(400).json({ error: 'Typ musí mít 2–50 znaků' });
+    if (!ALLOWED_TYPES.includes(type)) {
+        return res.status(400).json({ error: `Neplatný typ. Povolené hodnoty: ${ALLOWED_TYPES.join(', ')}` });
     }
 
     const capacityNum = parseInt(capacity);
@@ -64,10 +74,14 @@ router.post('/', authMiddleware, adminOnly, async (req, res) => {
         return res.status(400).json({ error: 'Neplatný popis' });
     }
 
+    if (location && (typeof location !== 'string' || location.trim().length > 100)) {
+        return res.status(400).json({ error: 'Umístění může mít max. 100 znaků' });
+    }
+
     try {
         const [result] = await db.query(
-            'INSERT INTO facilities (name, type, description, capacity) VALUES (?, ?, ?, ?)',
-            [name.trim(), type.trim(), description?.trim() || null, capacityNum]
+            'INSERT INTO facilities (name, type, description, capacity, location) VALUES (?, ?, ?, ?, ?)',
+            [name.trim(), type, description?.trim() || null, capacityNum, location?.trim() || null]
         );
         res.status(201).json({ message: 'Sportoviště přidáno', id: result.insertId });
     } catch (err) {
