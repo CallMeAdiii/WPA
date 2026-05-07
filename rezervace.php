@@ -1,26 +1,27 @@
 <?php
 // rezervace.php
 session_start();
-require_once 'includes/db.php';
+require_once 'includes/api.php';
 require_once 'includes/auth.php';
 
 requireLogin();
 
-// Načteme sportoviště podle ID z URL
+// Načti ID sportoviště z URL
 $facilityId = (int)($_GET['id'] ?? 0);
 if ($facilityId <= 0) {
     header('Location: sportovistealt.php');
     exit;
 }
 
-$stmt = $pdo->prepare('SELECT * FROM facilities WHERE id = ?');
-$stmt->execute([$facilityId]);
-$facility = $stmt->fetch();
+// Načti detail sportoviště z API
+$facResult = apiRequest('GET', '/api/facilities/' . $facilityId, [], getToken());
+handleUnauthorized($facResult);
 
-if (!$facility) {
+if ($facResult['status'] !== 200) {
     header('Location: sportovistealt.php');
     exit;
 }
+$facility = $facResult['data'];
 
 $errors  = [];
 $success = false;
@@ -30,28 +31,15 @@ $date     = $_POST['date']      ?? date('Y-m-d');
 $timeFrom = $_POST['time_from'] ?? '10:00';
 $timeTo   = $_POST['time_to']   ?? '11:00';
 
-// Zkontroluj dostupnost (AJAX i normální POST)
+// Délka termínu (jen vizuální výpočet, bez DB kontroly)
 $isAvailable = null;
 $duration    = null;
 
 if ($date && $timeFrom && $timeTo) {
-    // Vypočítej délku
     $from = strtotime($date . ' ' . $timeFrom);
     $to   = strtotime($date . ' ' . $timeTo);
     if ($to > $from) {
         $duration = ($to - $from) / 60; // minuty
-
-        // Zkontroluj kolizi rezervací pro dané sportoviště ve stejný den a čas
-        $stmtCheck = $pdo->prepare('
-            SELECT id FROM reservations
-            WHERE facility_id = ?
-              AND date = ?
-              AND status = \'active\'
-              AND time_from < ?
-              AND time_to   > ?
-        ');
-        $stmtCheck->execute([$facilityId, $date, $timeTo, $timeFrom]);
-        $isAvailable = $stmtCheck->fetch() === false;
     }
 }
 
@@ -80,18 +68,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
         }
     }
 
-    if (empty($errors) && !$isAvailable) {
-        $errors['general'] = 'Termín je již obsazený. Vyber jiný čas.';
-    }
-
     if (empty($errors)) {
-        $stmtIns = $pdo->prepare('
-            INSERT INTO reservations (user_id, facility_id, date, time_from, time_to, status)
-            VALUES (?, ?, ?, ?, ?, \'active\')
-        ');
-        $stmtIns->execute([currentUserId(), $facilityId, $date, $timeFrom, $timeTo]);
-        header('Location: moje-rezervace.php?success=1');
-        exit;
+        $resResult = apiRequest('POST', '/api/reservations', [
+            'facility_id' => $facilityId,
+            'date'        => $date,
+            'time_from'   => $timeFrom,
+            'time_to'     => $timeTo,
+        ], getToken());
+
+        handleUnauthorized($resResult);
+
+        if ($resResult['status'] === 201) {
+            header('Location: moje-rezervace.php?success=1');
+            exit;
+        } elseif ($resResult['status'] === 409) {
+            $errors['general'] = 'Termín je již obsazený. Vyber jiný čas.';
+        } else {
+            $errors['general'] = $resResult['data']['message'] ?? 'Nepodařilo se vytvořit rezervaci. Zkus to znovu.';
+        }
     }
 }
 
@@ -152,6 +146,7 @@ function formatDate(string $date): string {
     </div>
     <a href="sportovistealt.php" class="active nav-active-bar">Sportoviště</a>
     <a href="moje-rezervace.php">Moje rezervace</a>
+    <?php if (isAdmin()): ?><a href="admin.php">Admin</a><?php endif; ?>
     <a href="logout.php" class="nav-btn" style="color:white;">Odhlásit</a>
 </nav>
 

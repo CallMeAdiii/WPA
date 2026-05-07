@@ -1,8 +1,8 @@
 <?php
 // login.php
 session_start();
-require_once 'includes/db.php';  // Opravená cesta
-require_once 'includes/auth.php'; // Opravená cesta
+require_once 'includes/api.php';
+require_once 'includes/auth.php';
 
 // Pokud je uživatel přihlášen, přesměruj na sportoviště
 if (isLoggedIn()) {
@@ -19,18 +19,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || empty($password)) {
         $error = 'Vyplň prosím email a heslo.';
     } else {
-        $stmt = $pdo->prepare('SELECT * FROM users WHERE email = ?');
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
+        $result = apiRequest('POST', '/api/auth/login', [
+            'email'    => $email,
+            'password' => $password,
+        ]);
 
-        if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user_id']   = $user['id'];
-            $_SESSION['user_name'] = $user['name'];
-            $_SESSION['user_role'] = $user['role'];
+        if ($result['status'] === 200) {
+            $_SESSION['user_id']   = $result['data']['user']['id'];
+            $_SESSION['user_name'] = $result['data']['user']['name'];
+            $_SESSION['user_role'] = $result['data']['user']['role'];
+            $_SESSION['api_token'] = $result['data']['token'];
             header('Location: sportovistealt.php');
             exit;
-        } else {
+        } elseif ($result['status'] === 401) {
             $error = 'Nesprávný email nebo heslo.';
+        } else {
+            $error = $result['data']['message'] ?? 'Chyba při přihlašování. Zkus to znovu.';
         }
     }
 }

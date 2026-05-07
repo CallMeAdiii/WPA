@@ -1,7 +1,7 @@
 <?php
 // register.php
 session_start();
-require_once 'includes/db.php';
+require_once 'includes/api.php';
 require_once 'includes/auth.php';
 
 // Pokud je uživatel přihlášen, přesměruj na sportoviště
@@ -14,12 +14,12 @@ $errors = [];
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name     = trim($_POST['name'] ?? '');
-    $email    = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $name      = trim($_POST['name'] ?? '');
+    $email     = trim($_POST['email'] ?? '');
+    $password  = $_POST['password'] ?? '';
     $password2 = $_POST['password2'] ?? '';
 
-    // Validace
+    // Klientská validace (formát a základní pravidla)
     if (empty($name)) {
         $errors['name'] = 'Zadej své jméno.';
     } elseif (strlen($name) < 2) {
@@ -30,13 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['email'] = 'Zadej email.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors['email'] = 'Zadej platný email.';
-    } else {
-        // Zkontroluj duplicitu emailu
-        $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
-        $stmt->execute([$email]);
-        if ($stmt->fetch()) {
-            $errors['email'] = 'Tento email je již zaregistrován.';
-        }
     }
 
     if (empty($password)) {
@@ -49,21 +42,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['password2'] = 'Hesla se neshodují.';
     }
 
-    // Pokud nejsou chyby, zaregistruj uživatele
+    // Pokud nejsou lokální chyby, pošli registraci na API
     if (empty($errors)) {
-        $hashed = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, \'student\')');
-        $stmt->execute([$name, $email, $hashed]);
+        $result = apiRequest('POST', '/api/auth/register', [
+            'name'     => $name,
+            'email'    => $email,
+            'password' => $password,
+            'role'     => 'student',
+        ]);
 
-        $userId = $pdo->lastInsertId();
+        if ($result['status'] === 201) {
+            // Automatické přihlášení po registraci
+            $loginResult = apiRequest('POST', '/api/auth/login', [
+                'email'    => $email,
+                'password' => $password,
+            ]);
 
-        // Automaticky přihlásit po registraci
-        $_SESSION['user_id']   = $userId;
-        $_SESSION['user_name'] = $name;
-        $_SESSION['user_role'] = 'student';
+            if ($loginResult['status'] === 200) {
+                $_SESSION['user_id']   = $loginResult['data']['user']['id'];
+                $_SESSION['user_name'] = $loginResult['data']['user']['name'];
+                $_SESSION['user_role'] = $loginResult['data']['user']['role'];
+                $_SESSION['api_token'] = $loginResult['data']['token'];
+                header('Location: sportovistealt.php');
+                exit;
+            }
 
-        header('Location: sportovistealt.php');
-        exit;
+            // Login se nezdařil – přesměruj na přihlášení
+            header('Location: login.php');
+            exit;
+
+        } elseif ($result['status'] === 409) {
+            $errors['email'] = 'Tento email je již zaregistrován.';
+        } else {
+            $errors['general'] = $result['data']['message'] ?? 'Chyba při registraci. Zkus to znovu.';
+        }
     }
 }
 ?>
@@ -120,6 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <h2>Registrace</h2>
         <p class="sub">Vytvoř si účet a začni rezervovat sportoviště.</p>
+
+        <?php if (isset($errors['general'])): ?>
+            <div class="alert alert-error"><?= htmlspecialchars($errors['general']) ?></div>
+        <?php endif; ?>
 
         <form method="POST" action="register.php" novalidate>
 

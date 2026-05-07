@@ -1,22 +1,16 @@
 <?php
 // moje-rezervace.php
 session_start();
-require_once 'includes/db.php';
+require_once 'includes/api.php';
 require_once 'includes/auth.php';
 
 requireLogin();
 
-$userId = currentUserId();
-
-// Zrušení rezervace
+// Zrušení rezervace přes API
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_id'])) {
     $cancelId = (int)$_POST['cancel_id'];
-    // Zruš jen pokud patří přihlášenému uživateli
-    $stmt = $pdo->prepare('
-        UPDATE reservations SET status = \'cancelled\'
-        WHERE id = ? AND user_id = ? AND status = \'active\'
-    ');
-    $stmt->execute([$cancelId, $userId]);
+    $delResult = apiRequest('DELETE', '/api/reservations/' . $cancelId, [], getToken());
+    handleUnauthorized($delResult);
     header('Location: moje-rezervace.php?cancelled=1');
     exit;
 }
@@ -24,27 +18,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_id'])) {
 // Záložka: aktivní nebo zrušené
 $tab = $_GET['tab'] ?? 'active';
 
-// Načti aktivní rezervace uživatele
-$stmtActive = $pdo->prepare('
-    SELECT r.*, f.name AS facility_name, f.type AS facility_type
-    FROM reservations r
-    JOIN facilities f ON f.id = r.facility_id
-    WHERE r.user_id = ? AND r.status = \'active\'
-    ORDER BY r.date ASC, r.time_from ASC
-');
-$stmtActive->execute([$userId]);
-$activeReservations = $stmtActive->fetchAll();
+// Načti všechny rezervace uživatele z API
+$resResult = apiRequest('GET', '/api/reservations', [], getToken());
+handleUnauthorized($resResult);
 
-// Načti zrušené rezervace uživatele
-$stmtCancelled = $pdo->prepare('
-    SELECT r.*, f.name AS facility_name, f.type AS facility_type
-    FROM reservations r
-    JOIN facilities f ON f.id = r.facility_id
-    WHERE r.user_id = ? AND r.status = \'cancelled\'
-    ORDER BY r.date DESC, r.time_from DESC
-');
-$stmtCancelled->execute([$userId]);
-$cancelledReservations = $stmtCancelled->fetchAll();
+$allReservations = ($resResult['status'] === 200) ? $resResult['data'] : [];
+
+// Normalizuj pole 'type' → 'facility_type' (API vrací 'type', šablona čeká 'facility_type')
+// Admin vidí rezervace všech — filtrujeme jen na aktuálního uživatele
+$myId = currentUserId();
+$allReservations = array_map(function ($r) {
+    $r['facility_type'] = $r['type'] ?? '';
+    return $r;
+}, $allReservations);
+
+$allReservations = array_values(array_filter(
+    $allReservations,
+    fn($r) => (int)$r['user_id'] === $myId
+));
+
+// Rozděl podle statusu
+$activeReservations = array_values(array_filter(
+    $allReservations,
+    fn($r) => $r['status'] === 'active'
+));
+$cancelledReservations = array_values(array_filter(
+    $allReservations,
+    fn($r) => $r['status'] === 'cancelled'
+));
+
+// Seřaď aktivní ASC, zrušené DESC
+usort($activeReservations, fn($a, $b) =>
+    strcmp($a['date'] . $a['time_from'], $b['date'] . $b['time_from'])
+);
+usort($cancelledReservations, fn($a, $b) =>
+    strcmp($b['date'] . $b['time_from'], $a['date'] . $a['time_from'])
+);
 
 $shown = $tab === 'cancelled' ? $cancelledReservations : $activeReservations;
 
@@ -91,6 +100,7 @@ function iconBgClass(string $type): string {
     </div>
     <a href="sportovistealt.php">Sportoviště</a>
     <a href="moje-rezervace.php" class="active nav-active-bar">Moje rezervace</a>
+    <?php if (isAdmin()): ?><a href="admin.php">Admin</a><?php endif; ?>
     <a href="logout.php" class="nav-btn" style="color:white;">Odhlásit</a>
 </nav>
 

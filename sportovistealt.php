@@ -1,7 +1,7 @@
 <?php
 // sportovistealt.php
 session_start();
-require_once 'includes/db.php';
+require_once 'includes/api.php';
 require_once 'includes/auth.php';
 
 requireLogin(); // přesměruje na login.php pokud není přihlášen
@@ -9,7 +9,6 @@ requireLogin(); // přesměruje na login.php pokud není přihlášen
 // Filtr podle typu
 $filter = $_GET['filter'] ?? 'vse';
 
-// Připravíme filtr – typy sportovišť (dynamicky z DB)
 $typeMap = [
     'vse'        => null,
     'telocvicna' => 'tělocvična',
@@ -20,14 +19,15 @@ $typeMap = [
 
 $activeType = $typeMap[$filter] ?? null;
 
+// Načti sportoviště z API
+$params = [];
 if ($activeType !== null) {
-    $stmt = $pdo->prepare('SELECT * FROM facilities WHERE type = ? ORDER BY id ASC');
-    $stmt->execute([$activeType]);
-} else {
-    $stmt = $pdo->query('SELECT * FROM facilities ORDER BY id ASC');
+    $params['type'] = $activeType;
 }
 
-$facilities = $stmt->fetchAll();
+$result = apiRequest('GET', '/api/facilities', $params, getToken());
+handleUnauthorized($result);
+$facilities = ($result['status'] === 200) ? $result['data'] : [];
 
 // Helper: vrátí CSS třídu pro tag podle typu sportoviště
 function tagClass(string $type): string {
@@ -150,6 +150,7 @@ function facilityVisualSVG(string $type, int $id): string {
     </div>
     <a href="sportovistealt.php" class="active nav-active-bar">Sportoviště</a>
     <a href="moje-rezervace.php">Moje rezervace</a>
+    <?php if (isAdmin()): ?><a href="admin.php">Admin</a><?php endif; ?>
     <a href="logout.php" class="nav-btn" style="color:white;">Odhlásit</a>
 </nav>
 

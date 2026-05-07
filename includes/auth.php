@@ -2,10 +2,10 @@
 // includes/auth.php – pomocné funkce pro autentizaci
 
 /**
- * Vrátí true pokud je uživatel přihlášen.
+ * Vrátí true pokud je uživatel přihlášen (má user_id + JWT token v session).
  */
 function isLoggedIn(): bool {
-    return isset($_SESSION['user_id']);
+    return isset($_SESSION['user_id'], $_SESSION['api_token']);
 }
 
 /**
