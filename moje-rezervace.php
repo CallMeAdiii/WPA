@@ -101,6 +101,7 @@ function iconBgClass(string $type): string {
     <a href="sportovistealt.php">Sportoviště</a>
     <a href="moje-rezervace.php" class="active nav-active-bar">Moje rezervace</a>
     <?php if (isAdmin()): ?><a href="admin.php">Admin</a><?php endif; ?>
+    <a href="zmena-hesla.php">Změna hesla</a>
     <a href="logout.php" class="nav-btn" style="color:white;">Odhlásit</a>
 </nav>
 

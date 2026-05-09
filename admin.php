@@ -118,6 +118,7 @@ function typeLabel(string $type): string {
     <a href="sportovistealt.php">Sportoviště</a>
     <a href="moje-rezervace.php">Moje rezervace</a>
     <a href="admin.php" class="active nav-active-bar">Admin</a>
+    <a href="zmena-hesla.php">Změna hesla</a>
     <a href="logout.php" class="nav-btn" style="color:white;">Odhlásit</a>
 </nav>
 

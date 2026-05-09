@@ -151,6 +151,7 @@ function facilityVisualSVG(string $type, int $id): string {
     <a href="sportovistealt.php" class="active nav-active-bar">Sportoviště</a>
     <a href="moje-rezervace.php">Moje rezervace</a>
     <?php if (isAdmin()): ?><a href="admin.php">Admin</a><?php endif; ?>
+    <a href="zmena-hesla.php">Změna hesla</a>
     <a href="logout.php" class="nav-btn" style="color:white;">Odhlásit</a>
 </nav>
 
