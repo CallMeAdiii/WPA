@@ -4,7 +4,7 @@
 // Potlač PHP warning způsobený PCRE JIT na macOS
 @ini_set('pcre.jit', '0');
 
-define('API_BASE_URL', 'https://containing-immediately-enhance-shareholders.trycloudflare.com');
+define('API_BASE_URL', 'https://router-caution-electricity-benchmark.trycloudflare.com');
 
 /**
  * Odešle HTTP požadavek na REST API.
