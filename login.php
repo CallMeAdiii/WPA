@@ -103,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="login-footer">
                 <p>Nemáš účet? <a href="register.php">Zaregistruj se</a></p>
+                <p style="margin-top:8px;"><a href="zapomenute-heslo.php">Zapomněl jsem heslo</a></p>
             </div>
         </div>
     </div>
