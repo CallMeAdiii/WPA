@@ -1,9 +1,8 @@
 <?php
-// zapomenute-heslo.php – reset hesla bez přihlášení (zadání emailu + nového hesla)
+// zapomenute-heslo.php – odeslání emailu s odkazem pro reset hesla
 session_start();
 require_once 'includes/api.php';
 
-// Pokud je přihlášen, přesměruj na změnu hesla
 if (isset($_SESSION['user_id'], $_SESSION['api_token'])) {
     header('Location: zmena-hesla.php');
     exit;
@@ -13,37 +12,19 @@ $errors  = [];
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email       = trim($_POST['email']        ?? '');
-    $newPassword = $_POST['new_password']      ?? '';
-    $newPassword2 = $_POST['new_password2']    ?? '';
+    $email = trim($_POST['email'] ?? '');
 
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors['email'] = 'Zadej platný email.';
     }
 
-    if (empty($newPassword)) {
-        $errors['new_password'] = 'Zadej nové heslo.';
-    } elseif (strlen($newPassword) < 6) {
-        $errors['new_password'] = 'Heslo musí mít alespoň 6 znaků.';
-    }
-
-    if ($newPassword !== $newPassword2) {
-        $errors['new_password2'] = 'Hesla se neshodují.';
-    }
-
     if (empty($errors)) {
-        $result = apiRequest('POST', '/api/auth/reset-password', [
-            'email'       => $email,
-            'newPassword' => $newPassword,
+        $result = apiRequest('POST', '/api/auth/forgot-password', [
+            'email' => $email,
         ]);
 
-        if ($result['status'] === 200) {
-            $success = 'Heslo bylo úspěšně změněno. Nyní se můžeš přihlásit.';
-        } elseif ($result['status'] === 404) {
-            $errors['email'] = 'Účet s tímto emailem neexistuje.';
-        } else {
-            $errors['general'] = $result['data']['message'] ?? 'Nepodařilo se změnit heslo. Zkus to znovu.';
-        }
+        // Vždy zobraz úspěch – backend neodhaluje jestli email existuje
+        $success = 'Pokud účet existuje, poslali jsme ti email s odkazem pro reset hesla. Zkontroluj i složku spam.';
     }
 }
 ?>
@@ -59,7 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="login-layout">
 
-    <!-- Levá strana – hřiště grafika -->
     <div class="login-left">
         <svg viewBox="0 0 450 560" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
             <rect width="450" height="560" fill="#1c5c22"/>
@@ -79,29 +59,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </svg>
     </div>
 
-    <!-- Pravá strana – formulář -->
     <div class="login-right">
         <div class="login-box">
             <div class="login-header">
                 <h1>Zapomenuté heslo</h1>
-                <p>Zadej svůj email a zvol nové heslo</p>
+                <p>Zadej svůj email a pošleme ti odkaz pro reset</p>
             </div>
 
             <?php if ($success): ?>
                 <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
-                <div style="text-align:center; margin-top:16px;">
+                <div style="text-align:center; margin-top:20px;">
                     <a href="login.php" class="btn-primary" style="display:inline-block; text-decoration:none;">
-                        Přejít na přihlášení
+                        Zpět na přihlášení
                     </a>
                 </div>
             <?php else: ?>
 
-            <?php if (isset($errors['general'])): ?>
-                <div class="alert alert-error"><?= htmlspecialchars($errors['general']) ?></div>
-            <?php endif; ?>
-
             <form method="POST" action="zapomenute-heslo.php" novalidate>
-
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input
@@ -119,39 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php endif; ?>
                 </div>
 
-                <div class="form-group">
-                    <label for="new_password">Nové heslo</label>
-                    <input
-                        type="password"
-                        id="new_password"
-                        name="new_password"
-                        placeholder="••••••••"
-                        class="<?= isset($errors['new_password']) ? 'input-error' : '' ?>"
-                        autocomplete="new-password"
-                    >
-                    <?php if (isset($errors['new_password'])): ?>
-                        <span class="field-error"><?= htmlspecialchars($errors['new_password']) ?></span>
-                    <?php else: ?>
-                        <span class="register-note">Alespoň 6 znaků</span>
-                    <?php endif; ?>
-                </div>
-
-                <div class="form-group">
-                    <label for="new_password2">Nové heslo znovu</label>
-                    <input
-                        type="password"
-                        id="new_password2"
-                        name="new_password2"
-                        placeholder="••••••••"
-                        class="<?= isset($errors['new_password2']) ? 'input-error' : '' ?>"
-                        autocomplete="new-password"
-                    >
-                    <?php if (isset($errors['new_password2'])): ?>
-                        <span class="field-error"><?= htmlspecialchars($errors['new_password2']) ?></span>
-                    <?php endif; ?>
-                </div>
-
-                <button type="submit" class="btn-primary">Nastavit nové heslo</button>
+                <button type="submit" class="btn-primary">Odeslat odkaz</button>
             </form>
 
             <?php endif; ?>
