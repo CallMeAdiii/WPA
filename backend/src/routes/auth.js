@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const { authMiddleware } = require('../middleware/auth');
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -32,7 +33,7 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const [result] = await db.query(
             'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-            [name, email, hashedPassword, userRole]
+            [name.trim(), email, hashedPassword, userRole]
         );
         res.status(201).json({ message: 'Registrace proběhla úspěšně', userId: result.insertId });
     } catch (err) {
@@ -86,6 +87,79 @@ router.post('/login', async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ error: 'Chyba serveru' });
+    }
+});
+
+// PATCH /api/auth/change-password — změna hesla přihlášeného uživatele
+router.patch('/change-password', authMiddleware, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'Vyplňte současné i nové heslo.' });
+    }
+
+    if (typeof newPassword !== 'string' || newPassword.length < 6 || newPassword.length > 100) {
+        return res.status(400).json({ message: 'Nové heslo musí mít 6–100 znaků.' });
+    }
+
+    try {
+        const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [req.user.id]);
+        const user = rows[0];
+
+        if (!user) {
+            return res.status(404).json({ message: 'Uživatel nenalezen.' });
+        }
+
+        const match = await bcrypt.compare(currentPassword, user.password);
+        if (!match) {
+            return res.status(401).json({ message: 'Současné heslo je nesprávné.' });
+        }
+
+        if (currentPassword === newPassword) {
+            return res.status(400).json({ message: 'Nové heslo musí být odlišné od současného.' });
+        }
+
+        const hashed = await bcrypt.hash(newPassword, 10);
+        await db.query('UPDATE users SET password = ? WHERE id = ?', [hashed, req.user.id]);
+
+        res.json({ message: 'Heslo bylo úspěšně změněno.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Chyba serveru.' });
+    }
+});
+
+// POST /api/auth/reset-password — reset hesla bez přihlášení (zapomenuté heslo)
+router.post('/reset-password', async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+        return res.status(400).json({ message: 'Email a nové heslo jsou povinné.' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: 'Neplatný formát emailu.' });
+    }
+
+    if (typeof newPassword !== 'string' || newPassword.length < 6 || newPassword.length > 100) {
+        return res.status(400).json({ message: 'Heslo musí mít 6–100 znaků.' });
+    }
+
+    try {
+        const [rows] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Účet s tímto emailem neexistuje.' });
+        }
+
+        const hashed = await bcrypt.hash(newPassword, 10);
+        await db.query('UPDATE users SET password = ? WHERE email = ?', [hashed, email]);
+
+        res.json({ message: 'Heslo bylo úspěšně změněno.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Chyba serveru.' });
     }
 });
 

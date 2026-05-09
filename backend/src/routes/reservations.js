@@ -10,7 +10,7 @@ router.get('/', authMiddleware, async (req, res) => {
 
         if (req.user.role === 'admin') {
             query = `
-                SELECT r.*, u.name as user_name, u.email, f.name as facility_name
+                SELECT r.*, u.name as user_name, u.email, f.name as facility_name, f.type
                 FROM reservations r
                 JOIN users u ON r.user_id = u.id
                 JOIN facilities f ON r.facility_id = f.id
