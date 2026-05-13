@@ -37,7 +37,7 @@ router.get('/', authMiddleware, async (req, res) => {
 
 // POST /api/reservations — vytvoření rezervace
 router.post('/', authMiddleware, async (req, res) => {
-    const { facility_id, date, time_from, time_to } = req.body;
+    const { facility_id, date, time_from, time_to, people_count = 1 } = req.body;
 
     if (!facility_id || !date || !time_from || !time_to) {
         return res.status(400).json({ error: 'Vyplňte sportoviště, datum a čas' });
@@ -65,34 +65,58 @@ router.post('/', authMiddleware, async (req, res) => {
         return res.status(400).json({ error: 'Čas od musí být před časem do' });
     }
 
+    const peopleNum = parseInt(people_count);
+    if (isNaN(peopleNum) || peopleNum < 1 || peopleNum > 10000) {
+        return res.status(400).json({ error: 'Neplatný počet osob' });
+    }
+
     try {
-        // Kontrola, zda sportoviště existuje
         const [facilities] = await db.query('SELECT * FROM facilities WHERE id = ?', [facility_id]);
         if (facilities.length === 0) {
             return res.status(404).json({ error: 'Sportoviště nenalezeno' });
         }
+        const facility = facilities[0];
 
-        // Kontrola překryvu s existující rezervací
-        const [conflicts] = await db.query(`
-            SELECT id FROM reservations
-            WHERE facility_id = ?
-              AND date = ?
-              AND status = 'active'
-              AND time_from < ?
-              AND time_to > ?
-        `, [facility_id, date, time_to, time_from]);
+        if (peopleNum > facility.capacity) {
+            return res.status(400).json({
+                error: `Počet osob (${peopleNum}) překračuje kapacitu sportoviště (${facility.capacity})`
+            });
+        }
 
-        if (conflicts.length > 0) {
-            return res.status(409).json({ error: 'Toto sportoviště je v daný čas již rezervováno' });
+        // Zkontroluj každou hodinu v rezervovaném rozsahu samostatně
+        const fromHour = parseInt(time_from.split(':')[0]);
+        const toHour   = parseInt(time_to.split(':')[0]);
+
+        for (let h = fromHour; h < toHour; h++) {
+            const slotStart = `${String(h).padStart(2, '0')}:00`;
+            const slotEnd   = `${String(h + 1).padStart(2, '0')}:00`;
+
+            const [[{ booked }]] = await db.query(`
+                SELECT COALESCE(SUM(people_count), 0) AS booked
+                FROM reservations
+                WHERE facility_id = ?
+                  AND date = ?
+                  AND status = 'active'
+                  AND time_from < ?
+                  AND time_to   > ?
+            `, [facility_id, date, slotEnd, slotStart]);
+
+            const available = facility.capacity - booked;
+            if (available < peopleNum) {
+                return res.status(409).json({
+                    error: `V čase ${slotStart}–${slotEnd} zbývá jen ${available} míst (obsazeno ${booked}/${facility.capacity}).`
+                });
+            }
         }
 
         const [result] = await db.query(
-            'INSERT INTO reservations (user_id, facility_id, date, time_from, time_to) VALUES (?, ?, ?, ?, ?)',
-            [req.user.id, facility_id, date, time_from, time_to]
+            'INSERT INTO reservations (user_id, facility_id, date, time_from, time_to, people_count) VALUES (?, ?, ?, ?, ?, ?)',
+            [req.user.id, facility_id, date, time_from, time_to, peopleNum]
         );
 
         res.status(201).json({ message: 'Rezervace vytvořena', id: result.insertId });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'Chyba serveru' });
     }
 });

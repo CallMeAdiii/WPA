@@ -49,6 +49,45 @@ router.get('/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// GET /api/facilities/:id/slots?date=YYYY-MM-DD — obsazenost po hodinách
+router.get('/:id/slots', authMiddleware, async (req, res) => {
+    const { date } = req.query;
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return res.status(400).json({ error: 'Neplatný datum (YYYY-MM-DD)' });
+    }
+
+    try {
+        const [facilities] = await db.query('SELECT * FROM facilities WHERE id = ?', [req.params.id]);
+        if (facilities.length === 0) return res.status(404).json({ error: 'Sportoviště nenalezeno' });
+        const facility = facilities[0];
+
+        const [reservations] = await db.query(`
+            SELECT time_from, time_to, people_count
+            FROM reservations
+            WHERE facility_id = ? AND date = ? AND status = 'active'
+        `, [req.params.id, date]);
+
+        const slots = [];
+        for (let h = 8; h <= 21; h++) {
+            const slotStart = `${String(h).padStart(2, '0')}:00:00`;
+            const slotEnd   = `${String(h + 1).padStart(2, '0')}:00:00`;
+            const booked = reservations
+                .filter(r => r.time_from < slotEnd && r.time_to > slotStart)
+                .reduce((sum, r) => sum + r.people_count, 0);
+            slots.push({
+                time:      slotStart.substring(0, 5),
+                booked,
+                capacity:  facility.capacity,
+                available: Math.max(0, facility.capacity - booked)
+            });
+        }
+
+        res.json({ capacity: facility.capacity, slots });
+    } catch (err) {
+        res.status(500).json({ error: 'Chyba serveru' });
+    }
+});
+
 // POST /api/facilities — přidání sportoviště (pouze admin)
 router.post('/', authMiddleware, adminOnly, async (req, res) => {
     const { name, type, description, capacity, location } = req.body;

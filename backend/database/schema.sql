@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     date DATE NOT NULL,
     time_from TIME NOT NULL,
     time_to TIME NOT NULL,
+    people_count INT NOT NULL DEFAULT 1,
     status ENUM('active', 'cancelled') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -49,3 +50,6 @@ INSERT INTO facilities (name, type, capacity, location, description) VALUES
 
 -- ⚠️ Admin účet — heslo vygeneruj přes POST /api/auth/register nebo seedovací skript
 -- INSERT INTO users (name, email, password, role) VALUES ('Administrátor', 'admin@sportoviste.cz', '<bcrypt_hash>', 'admin');
+
+-- Migrace: přidání people_count (bezpečné i na existující DB)
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS people_count INT NOT NULL DEFAULT 1;
