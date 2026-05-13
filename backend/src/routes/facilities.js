@@ -88,6 +88,37 @@ router.get('/:id/slots', authMiddleware, async (req, res) => {
     }
 });
 
+// PATCH /api/facilities/:id — úprava sportoviště (pouze admin)
+router.patch('/:id', authMiddleware, adminOnly, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM facilities WHERE id = ?', [req.params.id]);
+        if (rows.length === 0) return res.status(404).json({ error: 'Sportoviště nenalezeno' });
+        const facility = rows[0];
+
+        const { name, type, capacity, location, description } = req.body;
+        const newName     = name        ? name.trim()        : facility.name;
+        const newType     = type        || facility.type;
+        const newCapacity = capacity    ? parseInt(capacity) : facility.capacity;
+        const newLocation = location    !== undefined ? (location.trim() || null)    : facility.location;
+        const newDesc     = description !== undefined ? (description.trim() || null) : facility.description;
+
+        if (newName.length < 2 || newName.length > 100)
+            return res.status(400).json({ error: 'Název musí mít 2–100 znaků' });
+        if (!ALLOWED_TYPES.includes(newType))
+            return res.status(400).json({ error: `Neplatný typ. Povolené hodnoty: ${ALLOWED_TYPES.join(', ')}` });
+        if (isNaN(newCapacity) || newCapacity < 1 || newCapacity > 10000)
+            return res.status(400).json({ error: 'Kapacita musí být 1–10000' });
+
+        await db.query(
+            'UPDATE facilities SET name=?, type=?, capacity=?, location=?, description=? WHERE id=?',
+            [newName, newType, newCapacity, newLocation, newDesc, req.params.id]
+        );
+        res.json({ message: 'Sportoviště upraveno' });
+    } catch (err) {
+        res.status(500).json({ error: 'Chyba serveru' });
+    }
+});
+
 // POST /api/facilities — přidání sportoviště (pouze admin)
 router.post('/', authMiddleware, adminOnly, async (req, res) => {
     const { name, type, description, capacity, location } = req.body;

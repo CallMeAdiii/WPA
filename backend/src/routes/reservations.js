@@ -121,6 +121,63 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
+// PATCH /api/reservations/:id — úprava rezervace
+router.patch('/:id', authMiddleware, async (req, res) => {
+    const { date, time_from, time_to, people_count } = req.body;
+    try {
+        const [rows] = await db.query('SELECT * FROM reservations WHERE id = ?', [req.params.id]);
+        const reservation = rows[0];
+        if (!reservation) return res.status(404).json({ error: 'Rezervace nenalezena' });
+        if (req.user.role !== 'admin' && reservation.user_id !== req.user.id)
+            return res.status(403).json({ error: 'Nemáte oprávnění upravit tuto rezervaci' });
+        if (reservation.status !== 'active')
+            return res.status(400).json({ error: 'Nelze upravit zrušenou rezervaci' });
+
+        const newDate     = date      || reservation.date;
+        const newTimeFrom = time_from || reservation.time_from.substring(0, 5);
+        const newTimeTo   = time_to   || reservation.time_to.substring(0, 5);
+        const newPeople   = people_count !== undefined ? parseInt(people_count) : reservation.people_count;
+
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(newDate) || isNaN(Date.parse(newDate)))
+            return res.status(400).json({ error: 'Neplatný formát data' });
+        if (new Date(newDate) < new Date(new Date().toDateString()))
+            return res.status(400).json({ error: 'Nelze rezervovat v minulosti' });
+        if (newTimeFrom >= newTimeTo)
+            return res.status(400).json({ error: 'Čas od musí být před časem do' });
+        if (isNaN(newPeople) || newPeople < 1)
+            return res.status(400).json({ error: 'Neplatný počet osob' });
+
+        const [facilities] = await db.query('SELECT * FROM facilities WHERE id = ?', [reservation.facility_id]);
+        const facility = facilities[0];
+        if (newPeople > facility.capacity)
+            return res.status(400).json({ error: `Počet osob překračuje kapacitu (${facility.capacity})` });
+
+        const fromHour = parseInt(newTimeFrom.split(':')[0]);
+        const toHour   = parseInt(newTimeTo.split(':')[0]);
+        for (let h = fromHour; h < toHour; h++) {
+            const slotStart = `${String(h).padStart(2, '0')}:00`;
+            const slotEnd   = `${String(h + 1).padStart(2, '0')}:00`;
+            const [[{ booked }]] = await db.query(`
+                SELECT COALESCE(SUM(people_count), 0) AS booked FROM reservations
+                WHERE facility_id=? AND date=? AND status='active' AND id!=?
+                  AND time_from < ? AND time_to > ?
+            `, [reservation.facility_id, newDate, req.params.id, slotEnd, slotStart]);
+            if (facility.capacity - booked < newPeople)
+                return res.status(409).json({ error: `V čase ${slotStart}–${slotEnd} není dostatek míst.` });
+        }
+
+        await db.query(
+            'UPDATE reservations SET date=?, time_from=?, time_to=?, people_count=? WHERE id=?',
+            [newDate, newTimeFrom, newTimeTo, newPeople, req.params.id]
+        );
+        res.json({ message: 'Rezervace upravena' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Chyba serveru' });
+    }
+});
+
 // DELETE /api/reservations/:id — zrušení rezervace
 router.delete('/:id', authMiddleware, async (req, res) => {
     try {
