@@ -111,10 +111,10 @@ function typeLabel(string $type): string {
 <body>
 
 <nav>
-    <div class="nav-logo">
+    <a href="sportovistealt.php" class="nav-logo">
         <div class="nav-logo-icon">S</div>
         <span class="nav-logo-text">SportHub</span>
-    </div>
+    </a>
     <a href="sportovistealt.php">Sportoviště</a>
     <a href="moje-rezervace.php">Moje rezervace</a>
     <a href="admin.php" class="active nav-active-bar">Admin</a>

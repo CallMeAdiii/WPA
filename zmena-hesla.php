@@ -61,10 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
 <nav>
-    <div class="nav-logo">
+    <a href="sportovistealt.php" class="nav-logo">
         <div class="nav-logo-icon">S</div>
         <span class="nav-logo-text">SportHub</span>
-    </div>
+    </a>
     <a href="sportovistealt.php">Sportoviště</a>
     <a href="moje-rezervace.php">Moje rezervace</a>
     <?php if (isAdmin()): ?><a href="admin.php">Admin</a><?php endif; ?>

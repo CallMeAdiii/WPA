@@ -56,6 +56,7 @@ usort($cancelledReservations, fn($a, $b) =>
 );
 
 $shown = $tab === 'cancelled' ? $cancelledReservations : $activeReservations;
+$nextReservation = $activeReservations[0] ?? null;
 
 // Pomocné funkce
 function formatDate(string $date): string {
@@ -63,23 +64,24 @@ function formatDate(string $date): string {
     return $ts ? date('j. n. Y', $ts) : $date;
 }
 
-function facilityIcon(string $type): string {
-    return match($type) {
-        'tělocvična' => '🏀',
-        'posilovna'  => '🏋️',
-        'ovál'       => '🏃',
-        'hřiště'     => '⚽',
-        default      => '🏟️',
-    };
+function dateDay(string $date): string {
+    $ts = strtotime($date);
+    return $ts ? date('j', $ts) : '?';
 }
 
-function iconBgClass(string $type): string {
+function dateMonth(string $date): string {
+    static $months = ['','led','úno','bře','dub','kvě','čvn','čvc','srp','zář','říj','lis','pro'];
+    $ts = strtotime($date);
+    return $ts ? $months[(int)date('n', $ts)] : '';
+}
+
+function facilityTypeLabel(string $type): string {
     return match($type) {
-        'tělocvična' => 'icon-blue',
-        'posilovna'  => 'icon-dark',
-        'ovál'       => 'icon-blue',
-        'hřiště'     => 'icon-green',
-        default      => 'icon-green',
+        'tělocvična' => 'Tělocvična',
+        'posilovna'  => 'Posilovna',
+        'ovál'       => 'Ovál',
+        'hřiště'     => 'Hřiště',
+        default      => ucfirst($type),
     };
 }
 ?>
@@ -94,10 +96,10 @@ function iconBgClass(string $type): string {
 <body>
 
 <nav>
-    <div class="nav-logo">
+    <a href="sportovistealt.php" class="nav-logo">
         <div class="nav-logo-icon">S</div>
         <span class="nav-logo-text">SportHub</span>
-    </div>
+    </a>
     <a href="sportovistealt.php">Sportoviště</a>
     <a href="moje-rezervace.php" class="active nav-active-bar">Moje rezervace</a>
     <?php if (isAdmin()): ?><a href="admin.php">Admin</a><?php endif; ?>
@@ -110,6 +112,31 @@ function iconBgClass(string $type): string {
 
         <h1 class="page-heading">Moje rezervace</h1>
         <p class="page-sub">Přehled tvých aktuálních rezervací</p>
+
+        <!-- Stats -->
+        <div class="res-stats-header">
+            <div class="res-stat-card">
+                <div class="res-stat-icon">🏟️</div>
+                <div>
+                    <div class="res-stat-val"><?= count($activeReservations) ?></div>
+                    <div class="res-stat-label">Aktivních rezervací</div>
+                </div>
+            </div>
+            <div class="res-stat-card">
+                <div class="res-stat-icon">📅</div>
+                <div>
+                    <?php if ($nextReservation): ?>
+                        <div class="res-stat-val" style="font-size:15px;font-weight:500;line-height:1.3;">
+                            <?= formatDate($nextReservation['date']) ?>
+                        </div>
+                        <div class="res-stat-label"><?= htmlspecialchars($nextReservation['facility_name']) ?></div>
+                    <?php else: ?>
+                        <div class="res-stat-val" style="font-size:20px;color:#bbb;">—</div>
+                        <div class="res-stat-label">Žádná nadcházející</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
 
         <?php if (isset($_GET['success'])): ?>
             <div class="alert alert-success">Rezervace byla úspěšně vytvořena!</div>
@@ -135,9 +162,17 @@ function iconBgClass(string $type): string {
         <div class="res-list">
 
             <?php if (empty($shown)): ?>
-                <p class="res-empty">
-                    <?= $tab === 'cancelled' ? 'Žádné zrušené rezervace.' : 'Nemáš žádné aktivní rezervace.' ?>
-                </p>
+                <div class="res-empty">
+                    <span class="res-empty-icon"><?= $tab === 'cancelled' ? '🚫' : '🏟️' ?></span>
+                    <p class="res-empty-title">
+                        <?= $tab === 'cancelled' ? 'Žádné zrušené rezervace' : 'Zatím žádné rezervace' ?>
+                    </p>
+                    <p class="res-empty-sub">
+                        <?= $tab === 'cancelled'
+                            ? 'Žádnou rezervaci jsi zatím nezrušil.'
+                            : 'Vyber si sportoviště a rezervuj si termín.' ?>
+                    </p>
+                </div>
 
             <?php else: ?>
                 <?php foreach ($shown as $r): ?>
@@ -145,20 +180,20 @@ function iconBgClass(string $type): string {
                     <!-- Barevný proužek vlevo -->
                     <div class="<?= $r['status'] === 'active' ? 'res-stripe' : 'res-stripe-cancel' ?>"></div>
 
-                    <!-- Ikona sportoviště -->
-                    <div class="res-icon-box">
-                        <div class="res-icon <?= iconBgClass($r['facility_type']) ?>">
-                            <?= facilityIcon($r['facility_type']) ?>
-                        </div>
+                    <!-- Mini kalendář -->
+                    <div class="res-date-box">
+                        <div class="res-date-day"><?= dateDay($r['date']) ?></div>
+                        <div class="res-date-month"><?= dateMonth($r['date']) ?></div>
                     </div>
 
                     <!-- Info -->
                     <div class="res-info">
                         <p class="res-name"><?= htmlspecialchars($r['facility_name']) ?></p>
                         <p class="res-time">
-                            <?= formatDate($r['date']) ?> · <?= substr($r['time_from'], 0, 5) ?> – <?= substr($r['time_to'], 0, 5) ?>
+                            <?= substr($r['time_from'], 0, 5) ?> – <?= substr($r['time_to'], 0, 5) ?>
+                            · <?= (int)($r['people_count'] ?? 1) ?> os.
                         </p>
-                        <p class="res-id">#<?= $r['id'] ?></p>
+                        <p class="res-id">#<?= $r['id'] ?> · <?= facilityTypeLabel($r['facility_type']) ?></p>
                     </div>
 
                     <!-- Akce -->

@@ -5,6 +5,30 @@
 /* ---------- Reset & base ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root {
+    --clr-forest:      #1a3a1a;
+    --clr-forest-md:   #243f24;
+    --clr-forest-lt:   #2d6a2d;
+    --clr-forest-bg:   #e8f0e8;
+    --clr-forest-pale: #f0f5f0;
+    --clr-bg:          #f7f7f5;
+    --clr-surface:     #ffffff;
+    --clr-border:      #e8e8e8;
+    --clr-text:        #1a1a1a;
+    --clr-text-md:     #555555;
+    --clr-text-lt:     #888888;
+    --clr-text-xlt:    #bbbbbb;
+    --clr-error:       #c04040;
+    --clr-error-bg:    #fdecea;
+    --clr-error-bdr:   #f0c8c8;
+    --shadow-sm:       0 1px 3px rgba(0,0,0,0.07);
+    --shadow-md:       0 4px 20px rgba(0,0,0,0.10);
+    --radius-sm:       8px;
+    --radius-md:       12px;
+    --radius-lg:       16px;
+    --transition:      0.18s ease;
+}
+
 body {
     font-family: -apple-system, 'Segoe UI', sans-serif;
     background: #f7f7f5;
@@ -35,6 +59,8 @@ nav {
     align-items: center;
     gap: 8px;
     margin-right: auto;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 .nav-logo-icon {
@@ -604,35 +630,58 @@ nav a.active {
 .avail-ok {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
     font-size: 13px;
-    color: #2d6a2d;
-    margin-bottom: 18px;
+    font-weight: 500;
+    color: var(--clr-forest-lt);
+    background: var(--clr-forest-bg);
+    border: 1px solid #c8dfc8;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    animation: slideInDown 0.22s ease;
 }
 
 .avail-dot {
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
-    background: #2d6a2d;
+    background: var(--clr-forest-lt);
     flex-shrink: 0;
+    animation: pulseGreen 1.8s ease-in-out infinite;
 }
 
 .avail-error {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
     font-size: 13px;
-    color: #c04040;
-    margin-bottom: 18px;
+    font-weight: 500;
+    color: var(--clr-error);
+    background: var(--clr-error-bg);
+    border: 1px solid var(--clr-error-bdr);
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    animation: slideInDown 0.22s ease;
 }
 
 .avail-error-dot {
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
-    background: #c04040;
+    background: var(--clr-error);
     flex-shrink: 0;
+}
+
+@keyframes pulseGreen {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(45,106,45,0.55); }
+    50%       { box-shadow: 0 0 0 5px rgba(45,106,45,0); }
+}
+
+@keyframes slideInDown {
+    from { opacity: 0; transform: translateY(-5px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================================
@@ -662,13 +711,45 @@ nav a.active {
 }
 
 .res-card {
-    background: #fff;
-    border: 1px solid #e8e8e8;
-    border-radius: 12px;
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-md);
     display: grid;
-    grid-template-columns: 4px 60px 1fr auto;
+    grid-template-columns: 4px 72px 1fr auto;
     overflow: hidden;
     align-items: stretch;
+    transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.res-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.res-date-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--clr-bg);
+    border-right: 1px solid var(--clr-border);
+    padding: 14px 0;
+    gap: 2px;
+}
+
+.res-date-day {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--clr-text);
+    line-height: 1;
+}
+
+.res-date-month {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--clr-text-lt);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .res-stripe         { background: #2d6a2d; }
@@ -792,9 +873,27 @@ nav a.active {
 /* Empty reservations */
 .res-empty {
     text-align: center;
-    padding: 40px 20px;
-    color: #aaa;
-    font-size: 15px;
+    padding: 56px 20px 40px;
+}
+
+.res-empty-icon {
+    font-size: 42px;
+    display: block;
+    margin-bottom: 14px;
+    opacity: 0.35;
+}
+
+.res-empty-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--clr-text);
+    margin-bottom: 6px;
+}
+
+.res-empty-sub {
+    font-size: 14px;
+    color: var(--clr-text-lt);
+    line-height: 1.5;
 }
 
 /* ============================================================
@@ -832,7 +931,353 @@ nav a.active {
     .my-res-inner {
         padding: 24px 16px;
     }
+    .res-stats-header {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .reservation-visual-info {
+        bottom: 24px;
+        left: 24px;
+    }
+    .visual-facility-name {
+        font-size: 20px;
+    }
 }
+/* ============================================================
+   REZERVACE PAGE – enhanced
+   ============================================================ */
+.reservation-visual-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(8,24,8,0.10) 0%,
+        rgba(8,24,8,0.00) 40%,
+        rgba(8,24,8,0.60) 100%
+    );
+    z-index: 1;
+    pointer-events: none;
+}
+
+.reservation-visual-info {
+    position: absolute;
+    bottom: 44px;
+    left: 44px;
+    z-index: 2;
+    color: white;
+}
+
+.visual-facility-label {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 10px;
+    display: block;
+}
+
+.visual-facility-name {
+    font-size: 26px;
+    font-weight: 500;
+    color: white;
+    line-height: 1.2;
+    margin-bottom: 14px;
+}
+
+.visual-facility-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.visual-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.80);
+    background: rgba(255,255,255,0.13);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    padding: 5px 13px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.18);
+}
+
+.form-section-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--clr-text-lt);
+    margin-bottom: 12px;
+}
+
+.duration-bar-wrap {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--clr-border);
+}
+
+.duration-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--clr-text-lt);
+    margin-bottom: 7px;
+}
+
+.duration-bar-track {
+    height: 5px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.duration-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--clr-forest-lt), var(--clr-forest));
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================
+   SLOT CALENDAR
+   ============================================================ */
+.slots-loading {
+    text-align: center;
+    padding: 28px 0 16px;
+    color: var(--clr-text-lt);
+    font-size: 13px;
+}
+
+.slots-error {
+    text-align: center;
+    padding: 18px 0;
+    color: var(--clr-error);
+    font-size: 13px;
+}
+
+.slots-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 336px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.slots-grid::-webkit-scrollbar       { width: 4px; }
+.slots-grid::-webkit-scrollbar-track { background: transparent; }
+.slots-grid::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+.slot-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 60px;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: background 0.12s, border-color 0.12s;
+    user-select: none;
+    position: relative;
+}
+
+.slot-row:hover:not(.slot-full) {
+    background: var(--clr-forest-pale);
+}
+
+.slot-full {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #fff5f5;
+    border-color: #ffd0d0;
+}
+
+.slot-selected-start,
+.slot-selected-end {
+    background: var(--clr-forest-bg) !important;
+    border-color: var(--clr-forest-lt) !important;
+}
+
+.slot-in-range {
+    background: #f0f7f0;
+    border-color: #d4e8d4;
+}
+
+.slot-time {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--clr-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.slot-bar-wrap {
+    height: 7px;
+    background: #efefef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.slot-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.35s ease;
+    min-width: 3px;
+}
+
+.slot-empty  .slot-bar-fill { background: #e0e0e0; }
+.slot-low    .slot-bar-fill { background: #4caf50; }
+.slot-medium .slot-bar-fill { background: #ff9800; }
+.slot-high   .slot-bar-fill { background: #f44336; }
+.slot-full   .slot-bar-fill { background: #f44336; }
+
+.slot-numbers {
+    font-size: 11px;
+    color: var(--clr-text-lt);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.slot-full .slot-numbers {
+    color: var(--clr-error);
+    font-weight: 500;
+}
+
+.slot-hint {
+    font-size: 12px;
+    color: var(--clr-text-lt);
+    text-align: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--clr-border);
+    margin-top: 4px;
+}
+
+/* People counter */
+.people-counter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.people-stepper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.people-btn {
+    width: 38px;
+    height: 40px;
+    border: none;
+    background: #f5f5f5;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--clr-text);
+    transition: background 0.12s;
+    font-family: inherit;
+    flex-shrink: 0;
+}
+
+.people-btn:hover:not(:disabled) { background: #ececec; }
+.people-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.people-val {
+    width: 48px;
+    height: 40px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    border: none;
+    border-left: 1px solid var(--clr-border);
+    border-right: 1px solid var(--clr-border);
+    background: white;
+    color: var(--clr-text);
+    font-family: inherit;
+    -moz-appearance: textfield;
+}
+
+.people-val::-webkit-inner-spin-button,
+.people-val::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.people-avail-note {
+    font-size: 12px;
+    color: var(--clr-text-lt);
+}
+
+.people-avail-note strong {
+    color: var(--clr-forest-lt);
+    font-weight: 600;
+}
+
+/* Summary row – people line */
+.summary-row-highlight .val {
+    color: var(--clr-forest-lt);
+    font-weight: 600;
+}
+
+/* ============================================================
+   MOJE REZERVACE – stats header
+   ============================================================ */
+.res-stats-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.res-stat-card {
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: box-shadow var(--transition);
+}
+
+.res-stat-card:hover {
+    box-shadow: var(--shadow-sm);
+}
+
+.res-stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 11px;
+    background: var(--clr-forest-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.res-stat-val {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--clr-text);
+    line-height: 1;
+}
+
+.res-stat-label {
+    font-size: 12px;
+    color: var(--clr-text-lt);
+    margin-top: 3px;
+}
+
 /* ============================================================
    ADMIN PANEL
    ============================================================ */
