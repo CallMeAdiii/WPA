@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         handleUnauthorized($result);
         $success = ($result['status'] === 201)
             ? 'Sportoviště bylo úspěšně přidáno.'
-            : ($result['data']['message'] ?? 'Nepodařilo se přidat sportoviště.');
+            : ($result['data']['error'] ?? 'Nepodařilo se přidat sportoviště.');
         if ($result['status'] !== 201) $error = $success and $success = '';
         $tab = 'sportovistealt';
     }
@@ -135,6 +135,9 @@ function typeLabel(string $type): string {
 
         <?php if ($success): ?>
             <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+        <?php endif; ?>
+        <?php if (isset($_GET['edited'])): ?>
+            <div class="alert alert-success">Změny byly uloženy.</div>
         <?php endif; ?>
         <?php if ($error): ?>
             <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
@@ -292,7 +295,8 @@ function typeLabel(string $type): string {
                             <td><?= typeLabel($f['type']) ?></td>
                             <td><?= (int)$f['capacity'] ?> osob</td>
                             <td class="td-muted"><?= htmlspecialchars($f['location'] ?? '—') ?></td>
-                            <td>
+                            <td class="td-actions">
+                                <a href="upravit-sportoviste.php?id=<?= $f['id'] ?>" class="btn-edit">Upravit</a>
                                 <form method="POST" action="admin.php?tab=sportovistealt"
                                       onsubmit="return confirm('Opravdu chceš smazat sportoviště \"<?= htmlspecialchars($f['name'], ENT_QUOTES) ?>\"? Smažou se i všechny jeho rezervace.')">
                                     <input type="hidden" name="action" value="delete_facility">
@@ -366,7 +370,8 @@ function typeLabel(string $type): string {
                                 <?php endif; ?>
                             </td>
                             <?php if ($resTab !== 'cancelled'): ?>
-                            <td>
+                            <td class="td-actions">
+                                <a href="upravit-rezervaci.php?id=<?= $r['id'] ?>" class="btn-edit">Upravit</a>
                                 <form method="POST" action="admin.php?tab=rezervace&res=active"
                                       onsubmit="return confirm('Opravdu chceš zrušit tuto rezervaci?')">
                                     <input type="hidden" name="action" value="cancel_reservation">

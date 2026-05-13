@@ -847,6 +847,61 @@ nav a.active {
     background: #fdecea;
 }
 
+.btn-edit {
+    display: inline-block;
+    padding: 7px 14px;
+    border: 1px solid #c8dfc8;
+    border-radius: 7px;
+    background: white;
+    color: var(--clr-forest-lt);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.btn-edit:hover {
+    background: var(--clr-forest-bg);
+}
+
+.btn-secondary {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-sm);
+    background: white;
+    color: var(--clr-text-lt);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.btn-secondary:hover {
+    background: #f5f5f5;
+}
+
+.td-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--clr-text-lt);
+    text-decoration: none;
+}
+
+.back-link:hover {
+    color: var(--clr-text);
+}
+
 .new-res-btn {
     display: flex;
     align-items: center;

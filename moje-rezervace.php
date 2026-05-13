@@ -146,6 +146,10 @@ function facilityTypeLabel(string $type): string {
             <div class="alert alert-success">Rezervace byla zrušena.</div>
         <?php endif; ?>
 
+        <?php if (isset($_GET['edited'])): ?>
+            <div class="alert alert-success">Rezervace byla upravena.</div>
+        <?php endif; ?>
+
         <!-- Záložky -->
         <div class="tabs">
             <a href="?tab=active"
@@ -200,6 +204,7 @@ function facilityTypeLabel(string $type): string {
                     <div class="res-actions">
                         <?php if ($r['status'] === 'active'): ?>
                             <span class="badge-active">aktivní</span>
+                            <a href="upravit-rezervaci.php?id=<?= $r['id'] ?>" class="btn-edit">Upravit</a>
                             <form method="POST" action="moje-rezervace.php"
                                   onsubmit="return confirm('Opravdu chceš zrušit tuto rezervaci?')">
                                 <input type="hidden" name="cancel_id" value="<?= $r['id'] ?>">

@@ -274,6 +274,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentSlots && currentSlots.slots) {
         slotsLoading.style.display = 'none';
         renderSlots(currentSlots.slots);
+        // Předvyber sloty při editaci
+        if (window.__selectedStart !== undefined) {
+            selectedStart = window.__selectedStart;
+            selectedEnd   = window.__selectedEnd ?? null;
+            applySelectionHighlight();
+            updateFormState();
+        }
     } else if (dateInput?.value) {
         loadSlots(dateInput.value);
     }
